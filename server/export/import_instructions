@@ -1,0 +1,9 @@
+How to import:
+
+mongoimport export.json -d articles -c articles --drop
+
+First, start with the mongoimport program name.
+Next, specify the path to the books.json data file. In this example, it is export.json.
+Third, use -d articles to specify the target database, which is articles in this example.
+Fourth, use -c articles to specify the target collection, which is articles in this case.
+Finally, use the --drop flag to drop the collection if it exists before importing the data

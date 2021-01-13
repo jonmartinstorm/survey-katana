@@ -1,0 +1,26 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "Jon-Martin Storm",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "joi": "^17.1.1",
+    "method-override": "^3.0.0",
+    "mongoose": "^5.9.25",
+    "morgan": "^1.10.0",
+    "xlsx": "^0.16.4"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  }
+}
