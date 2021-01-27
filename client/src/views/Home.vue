@@ -47,7 +47,7 @@
 </template>
 
 <script>
-const API_URL = 'http://localhost:7788/api/articles';
+const API_URL = 'http://localhost:7777/api/articles';
 
 export default {
   name: 'Home',
