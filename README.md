@@ -237,6 +237,10 @@ TODO. You should not put this app online as it has no auth at the moment.
 ## TODO
 
 * [x] Some documentation
+* [ ] Move utils to own folder
+    * [ ] Move export to utils folder
+    * [ ] Move imports to utils folder
+    * [ ] Move edits to utils folder
 * [ ] Document the code
 * [ ] Add some auth to the api
 * [ ] Remove dependency of Mongodb as it is note really needed
