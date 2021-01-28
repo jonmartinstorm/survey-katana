@@ -1,0 +1,15 @@
+{
+  "name": "survey-katana-utils-import",
+  "version": "1.0.0",
+  "description": "Utilities for importing to Survey Katana",
+  "main": "readbib.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jon-Martin Storm",
+  "license": "MIT",
+  "dependencies": {
+    "joi": "^17.1.1",
+    "mongoose": "^5.9.25"
+  }
+}

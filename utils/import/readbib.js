@@ -1,9 +1,16 @@
+// This is a module for importing bib files to the database.
+// See import.js for calling this function.
+
 const fs = require('fs');
 const mongoose = require("mongoose");
-const database = require("../config/database");
-const articleDB = require("../models/article");
+const articleDB = require("../../server/models/article");
 
+database_url =  "mongodb://localhost/articles"
 
+/*
+ * Create a json object from a raw string from a World of Science bib file
+ *
+ */
 function jsonifyFullWS(element, s) {
     let entry = {
         title: '',
@@ -68,6 +75,10 @@ function jsonifyFullWS(element, s) {
     return entry;
 }
 
+/*
+ * Create a json object from a raw string from a Science Direct bib file
+ *
+ */
 function jsonifyFullSD(element, s) {
     let entry = {
         title: '',
@@ -111,7 +122,6 @@ function jsonifyFullSD(element, s) {
     };
 
     let lines = element.split(/\n(?!\s\s\s)/g);
-    //console.log(lines);
 
     for (let i = 0; i < lines.length; i++) {
         if (lines[i].split(' = ')[0].startsWith('title')) {
@@ -133,6 +143,10 @@ function jsonifyFullSD(element, s) {
     return entry;
 }
 
+/*
+ * Create a json object from a raw string from a IEEE bib file
+ *
+ */
 function jsonifyFullIEEE(element, s) {
     let entry = {
         title: '',
@@ -197,6 +211,10 @@ function jsonifyFullIEEE(element, s) {
     return entry;
 }
 
+/*
+ * Create a json object from a raw string from a Scopus bib file
+ *
+ */
 function jsonifyFullScopus(element, s) {
     let entry = {
         title: '',
@@ -261,11 +279,19 @@ function jsonifyFullScopus(element, s) {
     return entry;
 }
 
+/*
+ * Create a String array from a bib string.
+ *
+ */
 function bib2arr(data) {
     return data.split('\n@');
 }
 
-function bibFileToJsonWS(file, search) {
+/*
+ * Read a World of Science bib file and convert it to a Json object
+ *
+ */
+async function bibFileToJsonWS(file, search) {
     let data = fs.readFileSync(file, 'utf8');
 
     let contents = bib2arr(data).map(line => `@${line}`).slice(1);
@@ -279,7 +305,11 @@ function bibFileToJsonWS(file, search) {
     return array;
 }
 
-function bibFileToJsonSD(file, search) {
+/*
+ * Read a Science Direct bib file and convert it to a Json object
+ *
+ */
+async function bibFileToJsonSD(file, search) {
     let data = fs.readFileSync(file, 'utf8');
 
     let contents = bib2arr(data);
@@ -293,7 +323,11 @@ function bibFileToJsonSD(file, search) {
     return array;
 }
 
-function bibFileToJsonIEEE(file, search) {
+/*
+ * Read a IEEE bib file and convert it to a Json object
+ *
+ */
+async function bibFileToJsonIEEE(file, search) {
     let data = fs.readFileSync(file, 'utf8');
 
     let contents = bib2arr(data);
@@ -307,7 +341,11 @@ function bibFileToJsonIEEE(file, search) {
     return array;
 }
 
-function bibFileToJsonScopus(file, search) {
+/*
+ * Read a Scopus bib file and convert it to a Json object
+ *
+ */
+async function bibFileToJsonScopus(file, search) {
     let data = fs.readFileSync(file, 'utf8');
 
     let contents = bib2arr(data).map(line => `@${line}`).slice(1);
@@ -321,101 +359,75 @@ function bibFileToJsonScopus(file, search) {
     return array;
 }
 
+/*
+ * Save a array of Json objects to the mongoose database
+ * Prints to the console if there is an article in the DB with the same title
+ * This is because there may be duplicates bib files from different sources.
+ */
 function saveJsonToDB(array) {
-    mongoose.connect(database.url, {
+    mongoose.connect(database_url, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
         useFindAndModify: false,
-    });
-
-    let done = 0;
-    array.forEach((article) => {
-        articleDB.Article.findOne({ title: article.title }, (err, found) => {
-            if(err) { 
-                console.log(err);
-                exit();
-            } else {
-                if(!found) {
-                    // insert the article
-                    articleDB.create(article).then((result) => {
-                        done++;
-                        if (done == array.length) {
-                            exit();
-                        }
-                    }).catch((err) => {
-                        console.log(err);
-                        exit();
-                    });
+    }).then(() => {
+        console.log("Connected!")
+        console.log(array.length);
+        array.forEach((article) => {
+            articleDB.Article.findOne({ title: article.title }, (err, found) => {
+                if(err) { 
+                    console.log(err);
                 } else {
-                    // article already in db
-                    console.log("Article article already in db!");
-                    console.log(found.title);
-                    console.log(article.source);
-                    console.log(found.source);
-                    done++;
-                    if (done == array.length) {
-                        exit();
+                    console.log((article.title));
+                    if(!found) {
+                        // insert the article
+                        articleDB.create(article).then(() => {
+                            console.log("Inserted article in db!");
+                        }).catch((err) => {
+                            console.log(err);
+                            exit();
+                        });
+                    } else {
+                        // article already in db
+                        console.log("Article article already in db!");
+                        console.log(found.title);
+                        console.log(article.source);
+                        console.log(found.source);
                     }
                 }
-            }
+            }); 
         });
-        
+    }).then(() => {
+        console.log("Disconnect!"); //mongoose.disconnect();
     });
 
-    function exit() {
-        mongoose.disconnect();
-    }
+    // function exit() {
+    //     mongoose.disconnect();
+    // }
 }
 
-// Check import WS
-// let result = bibFileToJsonWS("WorldOfScience/D_CPS_WS.bib", "WebOfScience D CPS");
-// console.log("WS")
-// console.log(result.length);
-// console.log(result[0]);
-// console.log(result[1]);
+function findOne(array) {
+    mongoose.connect(database_url, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        useFindAndModify: false,
+    }).then(() => {
+        articleDB.Article.findOne({ title: array[0].title}, (err, found) => {
+            if(err) {
+                console.log(err);
+            } else {
+                console.log(article.title);
+            }
+        })
+    });
+}
 
-// Check import SD
-// result = bibFileToJsonSD("ScienceDirect/D_CPS_SD.bib", "ScienceDirect D CPS");
-// console.log("SD")
-// console.log(result.length);
-// console.log(result[0]);
-// console.log(result[1]);
-
-// Check import IEEE
-// result = bibFileToJsonIEEE("IEEEXplore/D_CPS_IEEE.bib", "IEEEXPlore D CPS");
-// console.log("ieee");
-// console.log(result.length);
-// console.log(result[0]);
-// console.log(result[1]);
-
-// Check import Scopus
-// result = bibFileToJsonScopus("Scopus/D_SCADA_SCOP.bib", "Scopus D SCADA");
-// console.log("Scopus");
-// console.log(result.length);
-// console.log(result[0]);
-// console.log(result[1]);
-
-// Save to DB
-// saveJsonToDB(bibFileToJsonWS("WorldOfScience/ID_CPS_WS.bib", "WebOfScience ID CPS"));
-// saveJsonToDB(bibFileToJsonWS("WorldOfScience/ID_ICS_WS.bib", "WebOfScience ID ICS"));
-// saveJsonToDB(bibFileToJsonWS("WorldOfScience/ID_SCADA_WS.bib", "WebOfScience ID SCADA"));
-// saveJsonToDB(bibFileToJsonWS("WorldOfScience/D_CPS_WS.bib", "WebOfScience D CPS"));
-// saveJsonToDB(bibFileToJsonWS("WorldOfScience/D_ICS_WS.bib", "WebOfScience D ICS"));
-// saveJsonToDB(bibFileToJsonWS("WorldOfScience/D_SCADA_WS.bib", "WebOfScience D SCADA"));
-
-// saveJsonToDB(bibFileToJsonIEEE("IEEEXplore/ID_ICS_IEEE.bib", "IEEEXPlore ID ICS"));
-// saveJsonToDB(bibFileToJsonIEEE("IEEEXplore/ID_SCADA_IEEE.bib", "IEEEXPlore ID SCADA"));
-// saveJsonToDB(bibFileToJsonIEEE("IEEEXplore/D_CPS_IEEE.bib", "IEEEXPlore D CPS"));
-// saveJsonToDB(bibFileToJsonIEEE("IEEEXplore/D_ICS_IEEE.bib", "IEEEXPlore D ICS"));
-// saveJsonToDB(bibFileToJsonIEEE("IEEEXplore/D_IACS_IEEE.bib", "IEEEXPlore D IACS"));
-// saveJsonToDB(bibFileToJsonIEEE("IEEEXplore/D_SCADA_IEEE.bib", "IEEEXPlore D SCADA"));
-
-// saveJsonToDB(bibFileToJsonSD("ScienceDirect/D_CPS_SD.bib", "ScienceDirect D CPS"));
-// saveJsonToDB(bibFileToJsonSD("ScienceDirect/D_ICS_SD.bib", "ScienceDirect D ICS"));
-// saveJsonToDB(bibFileToJsonSD("ScienceDirect/D_SCADA_SD.bib", "ScienceDirect D SCADA"));
-
-// saveJsonToDB(bibFileToJsonScopus("Scopus/D_SCADA_SCOP.bib", "Scopus D SCADA"));
-// saveJsonToDB(bibFileToJsonScopus("Scopus/D_ICS_SCOP.bib", "Scopus D ICS"));
-// saveJsonToDB(bibFileToJsonScopus("Scopus/D_CPS_SCOP.bib", "Scopus D CPS"));
+module.exports = {
+    bibFileToJsonIEEE,
+    bibFileToJsonSD,
+    bibFileToJsonScopus,
+    bibFileToJsonWS,
+    saveJsonToDB,
+    findOne,
+}
 
 
