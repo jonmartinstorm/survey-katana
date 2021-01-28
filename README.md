@@ -1,6 +1,8 @@
 # Survey-katana - A simple app for managing articles in litterature reviews
 A simple app for managing articles for litterature reviews.
 
+I learned most of what I needed to create this app from CJ at [Coding Garden](https://coding.garden/#/), credits where credits due.
+
 ## Overview
 
 Overview:
